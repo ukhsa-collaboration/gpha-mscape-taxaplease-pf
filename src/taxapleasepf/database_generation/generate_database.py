@@ -71,7 +71,7 @@ def main(tempdir, *, ncbi_taxonomy_data_url=None, db_path=None):
     with open(tempoutfilepath, "w") as outfile:
         csvwriter = csv.writer(outfile, delimiter=",", quoting=csv.QUOTE_MINIMAL)
         csvwriter.writerow(["taxid", "name", "rank", "parent_taxid"])
-        with Path("inspect.txt").open() as infile:
+        with Path(ncbi_taxonomy_data_compressed).open() as infile:
             for idx, line in enumerate(infile):
                 if line.startswith("#"):
                     continue
@@ -87,11 +87,11 @@ def main(tempdir, *, ncbi_taxonomy_data_url=None, db_path=None):
                 if taxid != 1:
                     parent_taxid = parent_lookup_dict[indent_count - 1]
                 else:
-                    parent_taxid = None
+                    parent_taxid = 1
 
-                csvwriter.writerow([str(taxid), taxon, rank, str(parent_taxid)])
+                csvwriter.writerow([str(taxid), taxon, rank, str(int(parent_taxid))])
 
-    concat_df = pd.read_csv(tempoutfilepath)
+    concat_df = pd.read_csv(tempoutfilepath, index_col=0)
 
     ###################
     # Database ingest #
