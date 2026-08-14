@@ -1,4 +1,4 @@
-from taxaplease import TaxaPlease
+from taxapleasepf import TaxaPlease
 
 
 def test_root_returns_itself_as_parent():

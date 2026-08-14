@@ -1,8 +1,8 @@
 import argparse
 import json
 
-from taxaplease.taxaplease import TaxaPlease
-from taxaplease.taxaplease import __version__ as tpVersion
+from taxapleasepf.taxaplease import TaxaPlease
+from taxapleasepf.taxaplease import __version__ as tpVersion
 
 
 def init_argparser():

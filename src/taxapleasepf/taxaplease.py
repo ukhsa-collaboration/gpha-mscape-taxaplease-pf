@@ -8,7 +8,7 @@ import networkx as nx
 import requests
 from bs4 import BeautifulSoup as bs
 
-import taxaplease.taxaplease_data as tpData
+import taxapleasepf.taxaplease_data as tpData
 
 __version__ = "2.2.3"
 
@@ -52,8 +52,8 @@ class TaxaPlease:
         ## define paths for the database and its
         ## containing folder
         if not self.db:
-            db_dir = Path(Path.home(), ".taxaplease")
-            db_path = Path(db_dir, "taxa.db")
+            db_dir = Path(Path.home(), ".taxapleasepf")
+            db_path = Path(db_dir, "taxapf.db")
         else:
             db_dir = Path(self.db).parent
             db_path = Path(self.db)
@@ -90,7 +90,7 @@ class TaxaPlease:
         -------
         None
         """
-        import taxaplease.database_generation.generate_database as gd
+        import taxapleasepf.database_generation.generate_database as gd
 
         with tempfile.TemporaryDirectory() as tempdir:
             if taxonomy_url:

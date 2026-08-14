@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import datetime
 import shutil
 import sqlite3
@@ -49,7 +50,7 @@ def main(
 
     ## default URL if not specified
     if not ncbi_taxonomy_data_url:
-        ncbi_taxonomy_data_url = "https://ftp.ncbi.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz"
+        ncbi_taxonomy_data_url = "https://genome-idx.s3.amazonaws.com/kraken/viral_20260626/inspect.txt"
 
     #######################################
     # Downloading and extracting the data #
@@ -59,73 +60,50 @@ def main(
     print(f"{datetime.datetime.now()} Downloading {ncbi_taxonomy_data_url}")
     ncbi_taxonomy_data_compressed = download_file(ncbi_taxonomy_data_url, destinationDir=tempdir)
 
-    ## extract the archive to a subfolder
-    print(f"{datetime.datetime.now()} Extracting {ncbi_taxonomy_data_compressed}")
-    shutil.unpack_archive(ncbi_taxonomy_data_compressed, extract_dir=Path(tempdir, "new_taxdump"))
-
-    ## technically I think you could download the stream straight into
-    ## the gzip extrator, but this works.
-
     ##################################
     # Processing the downloaded data #
     ##################################
 
-    ## get half the required info
-    print(f"{datetime.datetime.now()} Processing nodes (file 1/2)")
-    taxid_to_rank_df = pd.read_csv(
-        Path(tempdir, "new_taxdump", "nodes.dmp"),
-        sep="|",
-        quotechar="\t",
-        index_col=0,
-        names=["taxid", "parent_taxid", "rank"],
-        usecols=["taxid", "parent_taxid", "rank"],
-    )
+    parent_lookup_dict = {}
 
-    ## get the other half
-    print(f"{datetime.datetime.now()} Processing lineages (file 2/2)")
-    taxid_to_name_df = pd.read_csv(
-        Path(tempdir, "new_taxdump", "fullnamelineage.dmp"),
-        sep="|",
-        quotechar="\t",
-        index_col=0,
-        names=["name", "_", "__"],
-    ).drop(["_", "__"], axis=1)
+    tempoutfilepath = os.path.join(tempdir, "parsed_inspect.csv")
 
-    ## join the halves together on taxid
-    print(f"{datetime.datetime.now()} Joining nodes and lineages")
-    concat_df = pd.concat([taxid_to_rank_df, taxid_to_name_df], axis=1)[
-        ["name", "rank", "parent_taxid"]
-    ]
+    with open(tempoutfilepath, "w") as outfile:
+        outfile.write(",".join(["taxid", "name", "rank", "parent_taxid"]))
+        outfile.write("\n")
+        with Path(ncbi_taxonomy_data_compressed).open() as infile:
+            for idx, line in enumerate(infile):
+                if line.startswith("#"):
+                    continue
+                if not len(line):
+                    continue
+                splitline = line.split("\t")
+                rank = splitline[3]
+                taxid = int(splitline[4])
+                taxon = splitline[-1].strip()
+                indent_count = int(((len(splitline[-1]) - len(taxon)) - 1) / 2)
 
-    ## prep the deleted ids table
-    print(f"{datetime.datetime.now()} Processing deleted nodes")
-    deleted_ids_df = pd.read_csv(
-        Path(tempdir, "new_taxdump", "delnodes.dmp"),
-        sep="|",
-        index_col=0,
-        quotechar="\t",
-        names=["taxid", "_"],
-    ).drop("_", axis=1)
+                parent_lookup_dict[indent_count] = taxid
+                if taxid != 1:
+                    parent_taxid = parent_lookup_dict[indent_count-1]
+                else:
+                    parent_taxid = None
 
-    ## prep the merged ids table
-    print(f"{datetime.datetime.now()} Processing merged nodes")
-    merged_ids_df = pd.read_csv(
-        Path(tempdir, "new_taxdump", "merged.dmp"),
-        sep="|",
-        index_col=0,
-        quotechar="\t",
-        names=["old_taxid", "new_taxid", "_"],
-    ).drop("_", axis=1)
+                outfile.write(",".join([str(taxid), taxon, rank, str(parent_taxid)]))
+                outfile.write("\n")
+
+    concat_df = pd.read_csv(tempoutfilepath)
+
 
     ###################
     # Database ingest #
     ###################
 
     ## create an sqlite database
-    print(f"{datetime.datetime.now()} Staging taxa.db")
+    print(f"{datetime.datetime.now()} Staging taxapf.db")
     if not db_path:
-        db_dir = Path(Path.home(), ".taxaplease")
-        db_path = Path(db_dir, "taxa.db")
+        db_dir = Path(Path.home(), ".taxapleasepf")
+        db_path = Path(db_dir, "taxapf.db")
     else:
         db_dir = Path(db_path).parent
 
@@ -135,12 +113,6 @@ def main(
     ## should overwrite the table if exists
     print(f"{datetime.datetime.now()} Writing taxa table to {db_path.name}")
     concat_df.to_sql("taxa", con=conn, index_label="taxid", if_exists="replace")
-
-    print(f"{datetime.datetime.now()} Writing deleted_taxa table to {db_path.name}")
-    deleted_ids_df.to_sql("deleted_taxa", con=conn, index_label="taxid", if_exists="replace")
-
-    print(f"{datetime.datetime.now()} Writing merged_taxa table to {db_path.name}")
-    merged_ids_df.to_sql("merged_taxa", con=conn, index_label="old_taxid", if_exists="replace")
 
     ## create a metadata table that contains
     ## the current taxdatabase URL
