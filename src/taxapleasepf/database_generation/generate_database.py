@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import csv
 import datetime
 import shutil
 import sqlite3
@@ -40,17 +41,14 @@ def download_file(url, *, destinationDir=None):
     return local_filename
 
 
-def main(
-    tempdir,
-    *,
-    ncbi_taxonomy_data_url=None,
-    db_path=None
-):
+def main(tempdir, *, ncbi_taxonomy_data_url=None, db_path=None):
     start_time = datetime.datetime.now()
 
     ## default URL if not specified
     if not ncbi_taxonomy_data_url:
-        ncbi_taxonomy_data_url = "https://genome-idx.s3.amazonaws.com/kraken/viral_20260626/inspect.txt"
+        ncbi_taxonomy_data_url = (
+            "https://genome-idx.s3.amazonaws.com/kraken/pluspf_20260626/inspect.txt"
+        )
 
     #######################################
     # Downloading and extracting the data #
@@ -58,7 +56,9 @@ def main(
 
     ## download the data
     print(f"{datetime.datetime.now()} Downloading {ncbi_taxonomy_data_url}")
-    ncbi_taxonomy_data_compressed = download_file(ncbi_taxonomy_data_url, destinationDir=tempdir)
+    ncbi_taxonomy_data_compressed = download_file(
+        ncbi_taxonomy_data_url, destinationDir=tempdir
+    )
 
     ##################################
     # Processing the downloaded data #
@@ -69,9 +69,9 @@ def main(
     tempoutfilepath = os.path.join(tempdir, "parsed_inspect.csv")
 
     with open(tempoutfilepath, "w") as outfile:
-        outfile.write(",".join(["taxid", "name", "rank", "parent_taxid"]))
-        outfile.write("\n")
-        with Path(ncbi_taxonomy_data_compressed).open() as infile:
+        csvwriter = csv.writer(outfile, delimiter=",", quoting=csv.QUOTE_MINIMAL)
+        csvwriter.writerow(["taxid", "name", "rank", "parent_taxid"])
+        with Path("inspect.txt").open() as infile:
             for idx, line in enumerate(infile):
                 if line.startswith("#"):
                     continue
@@ -85,15 +85,13 @@ def main(
 
                 parent_lookup_dict[indent_count] = taxid
                 if taxid != 1:
-                    parent_taxid = parent_lookup_dict[indent_count-1]
+                    parent_taxid = parent_lookup_dict[indent_count - 1]
                 else:
                     parent_taxid = None
 
-                outfile.write(",".join([str(taxid), taxon, rank, str(parent_taxid)]))
-                outfile.write("\n")
+                csvwriter.writerow([str(taxid), taxon, rank, str(parent_taxid)])
 
     concat_df = pd.read_csv(tempoutfilepath)
-
 
     ###################
     # Database ingest #
@@ -122,7 +120,9 @@ def main(
         .set_index("key")
     )
 
-    metadata_table_df.to_sql("metadata", con=conn, index_label="key", if_exists="replace")
+    metadata_table_df.to_sql(
+        "metadata", con=conn, index_label="key", if_exists="replace"
+    )
 
     print(f"{datetime.datetime.now()} Done in {datetime.datetime.now() - start_time}")
 
