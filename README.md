@@ -1,17 +1,17 @@
-# gpha-mscape-taxaplease
+# gpha-mscape-taxaplease-pf
 
 ## What is this?
 
-taxaPlease: A CLI utility and importable python module for wrangling NCBI taxids.
+taxapleasePF: A CLI utility and importable python module for wrangling NCBI taxids.
 
 ## Installation?
 
 ```bash
 ## pip install straight from the github repo
-pip install git+https://github.com/ukhsa-collaboration/gpha-mscape-taxaplease.git
+pip install git+https://github.com/ukhsa-collaboration/gpha-mscape-taxaplease-pf.git
 ```
 
-When first instantiated, an NCBI taxonomy database will be downloaded. This only happens once.
+When first instantiated, an kraken2 taxonomy database will be downloaded. This only happens once.
 
 ## What can it do?
 
@@ -33,9 +33,9 @@ For a given taxid, we can:
 
 ## How do I use it?
 
-To use it in your code, have a look at `demo.iypnb` or just jump in and `from taxaplease import TaxaPlease`.
+To use it in your code, have a look at `demo.iypnb` or just jump in and `from taxapleasepf import TaxaPlease`.
 
-If you just want a commandline tool, try `taxaplease -h` to see what it can do.
+If you just want a commandline tool, try `taxapleasePF -h` to see what it can do.
 
 Realistically, you're probably trying to do one of the following:
 
@@ -53,34 +53,37 @@ Each subcommand also has `-h` help information.
 
 ## Where did that database come from?
 
-From [NCBI](https://ftp.ncbi.nih.gov/pub/taxonomy/new_taxdump/) plus some wrangling.
+From the PlusPF inspect.txt file on <https://benlangmead.github.io/aws-indexes/k2> plus some wrangling.
 
 The code for generating it is in `database_generation/generate_database.py`
 
 ## Do you really need to include taxa like wolves and aloe vera?
 
-Maybe not, but they're in there for now.
+They aren't actually included...
+
+If you did want them, see [taxaPlease](https://github.com/ukhsa-collaboration/gpha-mscape-taxaplease) instead which
+is built from the NCBI taxonomy.
 
 ## Where is the database stored?
 
-By default, the taxaplease database is stored in your home directory, in a `.taxaplease` folder. 
+By default, the taxapleasePF database is stored in your home directory, in a `.taxapleasepf` folder. 
 To recreate the database, you can just delete this folder.
 
 ## But I want to use a different database location!
 
-As of v2.0.0 you can supply taxaPlease with a custom database location - just provide the path to
+You can supply taxaPleasePF with a custom database location - just provide the path to
 the database file using the `--database` command or as an argument when instantiating the class.
 
-If the file exists, this will be used as the sqlite database for taxaPlease queries - else the
+If the file exists, this will be used as the sqlite database for taxaPleasePF queries - else the
 database will be created at this location.
 
 ```bash
 ## use a custom database from the CLI
-taxaplease --database <path-to-database-file> record --record 1337
+taxapleasePF --database <path-to-database-file> record --record 1337
 ```
 
 ```python
-from taxaplease import TaxaPlease
+from taxapleasePF import TaxaPlease
 
 ## specify a custom database location in Python
 tp = TaxaPlease(database="mydir/custom.db")

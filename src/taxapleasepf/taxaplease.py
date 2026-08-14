@@ -362,7 +362,7 @@ class TaxaPlease:
         Optional[int]
             NCBI taxid corresponding to the genus
         """
-        return self.get_specified_rank_taxid(inputTaxid, "genus")
+        return self.get_specified_rank_taxid(inputTaxid, "G")
 
     @functools.cache  # noqa: B019
     def get_species_taxid(self, inputTaxid: int | str) -> int | str | None:
@@ -387,7 +387,7 @@ class TaxaPlease:
         Optional[int]
             NCBI taxid corresponding to the species
         """
-        return self.get_specified_rank_taxid(inputTaxid, "species")
+        return self.get_specified_rank_taxid(inputTaxid, "S")
 
     def get_superkingdom_taxid(self, inputTaxid: int | str) -> int | None:
         """
