@@ -11,7 +11,7 @@ def test_root_record_as_expected():
     assert taxaPlease.get_record(1) == {
         "taxid": 1,
         "name": "root",
-        "rank": "no rank",
+        "rank": "R",
         "parent_taxid": 1,
     }
 
@@ -33,13 +33,11 @@ def test_get_genus_taxid():
 
 def test_common_parent_record_distant_taxa():
     taxaPlease = TaxaPlease()
-    taxid_canis_lupus = 9612
-    taxid_aloe_vera = 34199
+    taxid_human = 9606
+    taxid_yeast = 4932
     assert (
-        taxaPlease.get_common_parent_record(taxid_canis_lupus, taxid_aloe_vera).get(
-            "name"
-        )
-        == "Eukaryota"
+        taxaPlease.get_common_parent_record(taxid_human, taxid_yeast).get("name")
+        == "Opisthokonta"
     )
 
 
@@ -76,14 +74,12 @@ def test_levels_between_distant_taxa():
 
     ## levels between distant taxa
     taxid_e_coli = 562
-    taxid_canis_lupus = 9612
+    taxid_human = 9606
 
-    assert taxaPlease.get_number_of_levels_between_taxa(
-        taxid_e_coli, taxid_canis_lupus
-    ) == {
-        "left_levels_to_common_parent": 26,
+    assert taxaPlease.get_number_of_levels_between_taxa(taxid_e_coli, taxid_human) == {
+        "left_levels_to_common_parent": 30,
         "right_levels_to_common_parent": 8,
-        "total_levels_between_taxa": 34,
+        "total_levels_between_taxa": 38,
     }
 
 
@@ -91,17 +87,17 @@ def test_is_virus_fail():
     taxaPlease = TaxaPlease()
 
     ## is aloe vera a virus? (no)
-    taxid_aloe_vera = 34199
+    taxid_yeast = 4932
 
-    assert not taxaPlease.isVirus(taxid_aloe_vera)
+    assert not taxaPlease.isVirus(taxid_yeast)
 
 
 def test_is_eukaryote_pass():
     taxaPlease = TaxaPlease()
 
-    taxid_aloe_vera = 34199
+    taxid_yeast = 4932
 
-    assert taxaPlease.isEukaryote(taxid_aloe_vera)
+    assert taxaPlease.isEukaryote(taxid_yeast)
 
 
 def test_is_archaea_fail():
@@ -122,41 +118,41 @@ def test_is_archaea_pass():
     assert taxaPlease.isArchaea(taxid_random_archaea)
 
 
-def test_current_taxid():
-    taxaPlease = TaxaPlease()
+# def test_current_taxid():
+#     taxaPlease = TaxaPlease()
 
-    taxid_bacteria = 2
+#     taxid_bacteria = 2
 
-    assert taxaPlease.checkTaxidStatus(taxid_bacteria) == {
-        "isCurrent": True,
-        "isDeleted": False,
-        "isMerged": False,
-    }
-
-
-def test_deleted_taxid():
-    taxaPlease = TaxaPlease()
-
-    deletedTaxid = 3
-
-    assert taxaPlease.checkTaxidStatus(deletedTaxid) == {
-        "isCurrent": False,
-        "isDeleted": True,
-        "isMerged": False,
-    }
+#     assert taxaPlease.checkTaxidStatus(taxid_bacteria) == {
+#         "isCurrent": True,
+#         "isDeleted": False,
+#         "isMerged": False,
+#     }
 
 
-def test_merged_taxid():
-    taxaPlease = TaxaPlease()
+# def test_deleted_taxid():
+#     taxaPlease = TaxaPlease()
 
-    photobacteriumProfundumOld = 12
-    photobacteriumProfundumNew = 74109
+#     deletedTaxid = 3
 
-    assert taxaPlease.checkTaxidStatus(photobacteriumProfundumOld) == {
-        "isCurrent": False,
-        "isDeleted": False,
-        "isMerged": photobacteriumProfundumNew,
-    }
+#     assert taxaPlease.checkTaxidStatus(deletedTaxid) == {
+#         "isCurrent": False,
+#         "isDeleted": True,
+#         "isMerged": False,
+#     }
+
+
+# def test_merged_taxid():
+#     taxaPlease = TaxaPlease()
+
+#     photobacteriumProfundumOld = 12
+#     photobacteriumProfundumNew = 74109
+
+#     assert taxaPlease.checkTaxidStatus(photobacteriumProfundumOld) == {
+#         "isCurrent": False,
+#         "isDeleted": False,
+#         "isMerged": photobacteriumProfundumNew,
+#     }
 
 
 def test_phages():

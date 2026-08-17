@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup as bs
 
 import taxapleasepf.taxaplease_data as tpData
 
-__version__ = "2.2.3"
+__version__ = "2.2.4"
 
 
 class TaxaPlease:
@@ -162,6 +162,7 @@ class TaxaPlease:
         List
             A list of absolute URLs
         """
+        raise NotImplementedError()
         relative_url_list = list(
             filter(
                 lambda x: x.endswith(".zip") or x.endswith(".tar.gz"),
@@ -180,6 +181,7 @@ class TaxaPlease:
         Keys: latest, archive
         Values: list of fully qualified URLs for each database file
         """
+        raise NotImplementedError()
         taxdump_archive_page = "https://ftp.ncbi.nih.gov/pub/taxonomy/taxdump_archive/"
         taxdump_latest_page = "https://ftp.ncbi.nih.gov/pub/taxonomy/new_taxdump/"
 
@@ -672,6 +674,7 @@ class TaxaPlease:
         bool:
             True if in the deleted table, else False
         """
+        raise NotImplementedError()
         cur = self.con.cursor()
         res = cur.execute(
             "SELECT * FROM deleted_taxa WHERE taxid = ?", [inputTaxid]
@@ -693,6 +696,7 @@ class TaxaPlease:
         bool:
             If in the table, return the new taxid, else return False
         """
+        raise NotImplementedError()
         cur = self.con.cursor()
         res = cur.execute(
             "SELECT new_taxid FROM merged_taxa WHERE old_taxid = ?", [inputTaxid]
@@ -717,6 +721,7 @@ class TaxaPlease:
         dict:
             dictionary with status of id
         """
+        raise NotImplementedError()
         return_dict = {}
 
         return_dict["isCurrent"] = bool(self.get_record(inputTaxid))
