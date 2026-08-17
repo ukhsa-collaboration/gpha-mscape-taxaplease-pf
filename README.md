@@ -41,12 +41,12 @@ Realistically, you're probably trying to do one of the following:
 
 ```bash
 ## get a record given a taxid
-## >> {"taxid": 1337, "name": "Streptococcus hyointestinalis", "rank": "species", "parent_taxid": 1301}
-taxaplease record --record 1337
+## >> {"taxid": 1337, "name": "Streptococcus hyointestinalis", "rank": "S", "parent_taxid": 1301}
+taxapleasePF record --record 1337
 
 ## get a parent taxid
 ## >> 1301
-taxaplease taxid --parent 1337
+taxapleasePF taxid --parent 1337
 ```
 
 Each subcommand also has `-h` help information.
@@ -83,7 +83,7 @@ taxapleasePF --database <path-to-database-file> record --record 1337
 ```
 
 ```python
-from taxapleasePF import TaxaPlease
+from taxapleasepf import TaxaPlease
 
 ## specify a custom database location in Python
 tp = TaxaPlease(database="mydir/custom.db")
